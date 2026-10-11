@@ -1,0 +1,1 @@
+# Fonts\n\nThe game uses Nunito when available, with Trebuchet MS and system UI fallbacks. For an offline release, add a licensed open-source Nunito WOFF2 file here and point an @font-face rule to it. No proprietary font file is bundled.\n
