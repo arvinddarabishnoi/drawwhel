@@ -14,7 +14,8 @@
 #topbar{position:fixed;left:14px;right:14px;top:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none}
 .pill{padding:9px 14px;border:1px solid var(--line);border-radius:14px;background:var(--panel);backdrop-filter:blur(12px);box-shadow:0 8px 26px #0003;font-weight:900;letter-spacing:.04em;font-size:clamp(11px,1.8vw,15px)}
 .pill small{display:block;font-weight:700;color:var(--muted);font-size:10px;letter-spacing:.1em;margin-bottom:2px}
-#hudRight{display:flex;gap:8px;align-items:center}
+#hudRight{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.sound-toggle{pointer-events:auto;border:1px solid #b9d8f066;background:linear-gradient(145deg,#203d55,#10273b);color:#ecf8ff;padding:10px 12px;border-radius:13px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #071421;font-size:12px;white-space:nowrap}.sound-toggle[aria-pressed="false"]{color:#9cb1c2;background:#172635;box-shadow:none}
 #drawBtn{pointer-events:auto;border:1px solid #d9ff9a88;background:linear-gradient(140deg,#c7f36b,#73be39);color:#18320d;padding:10px 15px;border-radius:13px;font-weight:1000;cursor:pointer;box-shadow:0 4px 0 #437a24}
 #drawBtn:active,.gameBtn:active{transform:translateY(2px);box-shadow:none}
 #bottomControls{position:fixed;left:16px;right:16px;bottom:16px;display:flex;align-items:end;justify-content:space-between;pointer-events:none}
@@ -33,14 +34,14 @@ h1,h2,p{margin-top:0}h2{margin-bottom:6px;font-size:clamp(22px,4vw,31px);letter-
 .gameBtn.secondary{color:#eaf4ff;background:#263f59;box-shadow:0 4px 0 #0b1724}
 .tips{font-size:12px;color:#8faac0;margin:12px 2px 0}
 #toast{position:fixed;left:50%;top:78px;transform:translateX(-50%);background:#102b40eF;border:1px solid #ffffff24;border-radius:20px;padding:9px 15px;color:white;font-size:12px;font-weight:900;opacity:0;transition:opacity .2s;pointer-events:none;z-index:8}
-@media(max-width:620px){#topbar{left:8px;right:8px;top:8px}.pill{padding:7px 9px;border-radius:11px}#bottomControls{left:8px;right:8px;bottom:10px}.control{height:47px;min-width:48px;border-radius:13px}.control.long{min-width:78px}#help{bottom:68px;font-size:10px}.modal{padding:16px}#drawingPad{height:190px}}
+@media(max-width:620px){#topbar{left:8px;right:8px;top:8px}.pill{padding:7px 9px;border-radius:11px}.sound-toggle{padding:8px 9px;font-size:10px}#drawBtn{padding:9px 10px;font-size:11px}#bottomControls{left:8px;right:8px;bottom:10px}.control{height:47px;min-width:48px;border-radius:13px}.control.long{min-width:78px}#help{bottom:68px;font-size:10px}.modal{padding:16px}#drawingPad{height:190px}}
 </style>
 </head>
 <body>
 <canvas id="game" aria-label="Draw Wheal HTML5 game canvas"></canvas>
 <div id="topbar">
   <div class="pill"><small>DRAW • ROLL • CONQUER</small><span id="levelLabel">DRAW WHEAL</span></div>
-  <div id="hudRight"><div class="pill"><small>COINS</small>🟡 <span id="coinsLabel">0</span></div><button id="drawBtn">✎ DRAW WHEEL</button></div>
+  <div id="hudRight"><div class="pill"><small>COINS</small>🟡 <span id="coinsLabel">0</span></div><button id="soundBtn" class="sound-toggle" aria-pressed="true" title="Toggle sound effects and music">🔊 SOUND ON</button><button id="drawBtn">✎ DRAW WHEEL</button></div>
 </div>
 <div id="bottomControls">
   <div class="controlGroup"><button class="control" id="leftBtn" aria-label="Brake or reverse">◀</button><button class="control" id="rightBtn" aria-label="Accelerate">▶</button></div>
@@ -82,6 +83,66 @@ const themes=[
 const backgroundAssets=['meadow','desert','forest','snow','neon-night'].map(name=>{const im=new Image();im.src='assets/backgrounds/'+name+'.svg';return im;});
 const groundAssets=['ground-rock','ground-desert','ground-forest','ground-snow','ground-rock'].map(name=>{const im=new Image();im.src='assets/textures/'+name+'.svg';return im;});
 const carBodyAsset=new Image();carBodyAsset.src='assets/cars/car-body.svg';
+// Locally synthesized audio: no external MP3s or downloads needed.
+let audioCtx=null,audioMaster=null,engineOsc=null,engineGain=null,musicTimer=null,musicStep=0,soundEnabled=true;
+function initAudio(){
+ const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+ if(!audioCtx){
+  audioCtx=new AC();audioMaster=audioCtx.createGain();audioMaster.gain.value=soundEnabled?.52:0;audioMaster.connect(audioCtx.destination);
+  engineOsc=audioCtx.createOscillator();engineOsc.type='sawtooth';engineOsc.frequency.value=62;
+  const filter=audioCtx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=280;
+  engineGain=audioCtx.createGain();engineGain.gain.value=.0001;engineOsc.connect(filter);filter.connect(engineGain);engineGain.connect(audioMaster);engineOsc.start();
+ }
+ if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+}
+function tone(freq,duration=.12,wave='sine',volume=.06,slide=0,delay=0){
+ if(!soundEnabled)return;initAudio();if(!audioCtx)return;
+ const start=audioCtx.currentTime+delay,osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+ osc.type=wave;osc.frequency.setValueAtTime(Math.max(20,freq),start);
+ if(slide)osc.frequency.exponentialRampToValueAtTime(Math.max(20,freq+slide),start+duration);
+ gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+.012);gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
+ osc.connect(gain);gain.connect(audioMaster);osc.start(start);osc.stop(start+duration+.025);
+}
+function noiseBurst(duration=.12,volume=.07,cutoff=650){
+ if(!soundEnabled)return;initAudio();if(!audioCtx)return;
+ const length=Math.max(1,Math.floor(audioCtx.sampleRate*duration)),buffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate),data=buffer.getChannelData(0);
+ for(let i=0;i<length;i++)data[i]=(Math.random()*2-1)*(1-i/length);
+ const source=audioCtx.createBufferSource(),filter=audioCtx.createBiquadFilter(),gain=audioCtx.createGain();
+ source.buffer=buffer;filter.type='lowpass';filter.frequency.value=cutoff;gain.gain.setValueAtTime(volume,audioCtx.currentTime);gain.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+duration);
+ source.connect(filter);filter.connect(gain);gain.connect(audioMaster);source.start();source.stop(audioCtx.currentTime+duration);
+}
+function playSound(name){
+ if(!soundEnabled)return;
+ if(name==='coin'){tone(740,.11,'triangle',.08,180);tone(1110,.16,'sine',.055,90,.055)}
+ else if(name==='jump'){tone(190,.19,'triangle',.08,300);tone(390,.10,'sine',.025,-65,.08)}
+ else if(name==='land'){noiseBurst(.13,.075,480);tone(92,.11,'sine',.07,-34)}
+ else if(name==='mount'){tone(420,.08,'triangle',.06,210);tone(660,.12,'triangle',.05,90,.07)}
+ else if(name==='start'){tone(330,.10,'triangle',.045,150);tone(495,.14,'triangle',.04,130,.08)}
+ else if(name==='win'){[523,659,784,1046].forEach((n,i)=>tone(n,.22,'triangle',.06,0,i*.13));tone(1318,.36,'sine',.045,0,.52)}
+ else if(name==='ui'){tone(560,.045,'triangle',.025,-75)}
+ else if(name==='crash'){noiseBurst(.25,.11,380);tone(78,.22,'sawtooth',.06,-44)}
+}
+function updateSoundButton(){
+ const b=document.getElementById('soundBtn');if(!b)return;
+ b.textContent=soundEnabled?'🔊 SOUND ON':'🔇 SOUND OFF';b.setAttribute('aria-pressed',String(soundEnabled));
+ b.title=soundEnabled?'Sound effects and music are on':'Sound effects and music are muted';
+ if(audioMaster&&audioCtx)audioMaster.gain.setTargetAtTime(soundEnabled?.52:0,audioCtx.currentTime,.035);
+ if(soundEnabled){initAudio();startMusic()}else{if(musicTimer){clearInterval(musicTimer);musicTimer=null}if(engineGain&&audioCtx)engineGain.gain.setTargetAtTime(.0001,audioCtx.currentTime,.04)}
+}
+function startMusic(){
+ if(!soundEnabled||musicTimer)return;initAudio();if(!audioCtx)return;
+ const notes=[392,494,587,494,440,523,659,523,392,494,587,784,659,587,494,440];
+ musicTimer=setInterval(()=>{if(!soundEnabled||!audioCtx)return;const n=notes[musicStep%notes.length];tone(n,.20,'triangle',.013);if(musicStep%4===0)tone(n/2,.28,'sine',.009);musicStep++},330);
+}
+function updateEngineSound(){
+ if(!audioCtx||!engineOsc||!engineGain)return;
+ const moving=screen==='playing'&&!paused&&!drawModal.classList.contains('show')&&soundEnabled?Math.abs(car.speed):0;
+ engineOsc.frequency.setTargetAtTime(58+Math.min(90,moving*22),audioCtx.currentTime,.08);
+ engineGain.gain.setTargetAtTime(moving>.2?Math.min(.045,moving*.009):.0001,audioCtx.currentTime,.10);
+}
+document.getElementById('soundBtn').addEventListener('click',()=>{soundEnabled=!soundEnabled;updateSoundButton();if(soundEnabled)playSound('ui')});
+document.addEventListener('pointerdown',()=>{if(soundEnabled){initAudio();startMusic()}},{once:true});
+window.addEventListener('keydown',()=>{if(soundEnabled){initAudio();startMusic()}},{once:true});
 const savedUnlocked=Math.max(1,Math.min(5,Number(localStorage.getItem('drawwheal-unlocked')||1)));
 let unlocked=savedUnlocked,levelIndex=0,screen='title',paused=false;
 let car={x:90,speed:0,jump:0,jumpV:0,rot:0,roll:0};let cameraX=0,coins=0,levelCoins=new Set(),last=0;
@@ -127,12 +188,12 @@ function drawPad(){
  if(wheelDraft.length){pctx.beginPath();wheelDraft.forEach((p,i)=>i?pctx.lineTo(p.x,p.y):pctx.moveTo(p.x,p.y));pctx.strokeStyle='#c7f36b';pctx.lineWidth=5;pctx.lineCap='round';pctx.lineJoin='round';pctx.stroke();pctx.beginPath();pctx.arc(wheelDraft[0].x,wheelDraft[0].y,5,0,Math.PI*2);pctx.fillStyle='#ffbc62';pctx.fill()}
  else{text(pctx,'DRAW A CLOSED WHEEL SHAPE',w/2,h/2,15,'#90abc0','center',800)}
 }
-function openDraw(){wheelDraft=[];drawPad();drawModal.classList.add('show');paused=screen==='playing';}
+function openDraw(){playSound('ui');wheelDraft=[];drawPad();drawModal.classList.add('show');paused=screen==='playing';}
 function closeDraw(){drawModal.classList.remove('show');if(screen==='playing')paused=false}
 function useDraft(){
  const normalized=normalizeSketch(wheelDraft);
- if(!normalized){toast('Draw a bigger closed shape first');return}
- wheelPoints=normalized;wheelSketch=wheelDraft.slice();closeDraw();toast('Custom wheel mounted!');
+ if(!normalized){toast('Draw a bigger closed shape first');playSound('ui');return}
+ wheelPoints=normalized;wheelSketch=wheelDraft.slice();closeDraw();toast('Custom wheel mounted!');playSound('mount');
 }
 function drawWheel(c,x,y,r,rotation=0){
  c.save();c.translate(x,y);c.rotate(rotation);
@@ -196,7 +257,7 @@ function drawFinish(c,l,cam){
  text(c,'FINISH',x+18,y-130,12,'#fff','center',1000)
 }
 function resetLevel(idx=levelIndex){
- levelIndex=idx;car={x:90,speed:0,jump:0,jumpV:0,rot:0,roll:0};cameraX=0;levelCoins=new Set();screen='playing';paused=false;pauseModal.classList.remove('show');updateHUD();
+ levelIndex=idx;car={x:90,speed:0,jump:0,jumpV:0,rot:0,roll:0};cameraX=0;levelCoins=new Set();screen='playing';paused=false;pauseModal.classList.remove('show');updateHUD();playSound('start');
 }
 function updateHUD(){label.textContent=screen==='title'?'DRAW WHEAL':('LEVEL '+(levelIndex+1)+' · '+levels[levelIndex].name.toUpperCase());coinsLabel.textContent=coins}
 function renderTitle(c){
@@ -231,7 +292,7 @@ function renderGame(c){
  roundedRect(c,350,18,260,10,5,'#0b1b2ca8');roundedRect(c,350,18,260*Math.min(1,car.x/l.length),10,5,'#c7f36b');
  // Coins and little track markers.
  roundedRect(c,20,80,205,55,13,'#0b1b2cbb','#ffffff20');text(c,l.goal,34,98,14,'#fff','left',900);text(c,'SPEED  '+Math.round(Math.abs(car.speed)*4)+' km/h',34,119,12,'#b8d7ed','left',800);
- if(car.x>=l.length){screen='win';unlocked=Math.max(unlocked,Math.min(5,levelIndex+2));localStorage.setItem('drawwheal-unlocked',String(unlocked));updateHUD()}
+ if(car.x>=l.length){screen='win';unlocked=Math.max(unlocked,Math.min(5,levelIndex+2));localStorage.setItem('drawwheal-unlocked',String(unlocked));updateHUD();playSound('win')}
 }
 function renderWin(c){
  const l=levels[levelIndex];drawSky(c,l,cameraX);drawTerrain(c,l,cameraX);const wx=cameraX+480,wy=terrainY(wx,l)-wheelRadius()-4;drawWheel(c,448,wy+1,22,0);drawWheel(c,512,wy+1,22,0);drawCar(c,480,wy-11,0);
@@ -252,13 +313,15 @@ function frame(t){
   else if(keys.left||touch.left)car.speed=Math.max(-1.8,car.speed-30*dt);
   else car.speed*=Math.pow(.89,dt*60);
   car.x=Math.max(0,car.x+car.speed*dt*60);
-  if(keys.jump&&car.jump<=0){car.jumpV=8.1;keys.jump=false}
+  if(keys.jump&&car.jump<=0){car.jumpV=8.1;keys.jump=false;playSound('jump')}
+  const wasAirborne=car.jump>0;
   car.jumpV-=20*dt;car.jump+=car.jumpV*dt*60;
-  if(car.jump<0){car.jump=0;car.jumpV=0}
+  if(car.jump<0){car.jump=0;car.jumpV=0;if(wasAirborne)playSound('land')}
   car.roll+=car.speed*.035;
   cameraX=Math.max(0,car.x-310);
-  levels[levelIndex].coins;for(let i=0;i<levels[levelIndex].coins;i++){if(!levelCoins.has(i)&&Math.abs(car.x-coinWorldX(i,levels[levelIndex]))<27){levelCoins.add(i);coins++;updateHUD();toast('+1 coin')}}
+  levels[levelIndex].coins;for(let i=0;i<levels[levelIndex].coins;i++){if(!levelCoins.has(i)&&Math.abs(car.x-coinWorldX(i,levels[levelIndex]))<27){levelCoins.add(i);coins++;updateHUD();toast('+1 coin');playSound('coin')}}
  }
+ updateEngineSound();
  const dpr=Math.min(2,window.devicePixelRatio||1);const sx=canvas.width/W,sy=canvas.height/H;
  ctx.setTransform(sx,0,0,sy,0,0);
  if(screen==='title')renderTitle(ctx);else if(screen==='select')renderLevelSelect(ctx);else if(screen==='win')renderWin(ctx);else if(paused)renderPause(ctx);else renderGame(ctx);
@@ -268,7 +331,7 @@ requestAnimationFrame(frame);
 function point(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}}
 canvas.addEventListener('pointerdown',e=>{
  if(drawModal.classList.contains('show')||pauseModal.classList.contains('show'))return;
- const p=point(e);
+ playSound('ui');const p=point(e);
  if(screen==='title'){
   if(p.y>263&&p.y<330){resetLevel(0);return}
   if(p.y>330&&p.y<390){screen='select';updateHUD();return}
@@ -307,7 +370,7 @@ function padPoint(e){const r=pad.getBoundingClientRect();return{x:(e.clientX-r.l
 pad.addEventListener('pointerdown',e=>{drawing=true;pad.setPointerCapture(e.pointerId);wheelDraft=[padPoint(e)];drawPad()});
 pad.addEventListener('pointermove',e=>{if(!drawing)return;wheelDraft.push(padPoint(e));drawPad()});
 function endDrawing(){drawing=false}pad.addEventListener('pointerup',endDrawing);pad.addEventListener('pointercancel',endDrawing);
-updateHUD();drawPad();
+updateHUD();drawPad();updateSoundButton();
 })();
 </script>
 </body>
