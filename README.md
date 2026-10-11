@@ -27,7 +27,8 @@ The game includes a **SOUND ON / SOUND OFF** button. Engine revs change with dri
 
 ## Game features
 
-- Polished, separate vector background scenes and ground textures for each theme.\n- Five levels with different visual themes: Sunny Hills, Dusty Dunes, Pinewood Pass, Frostbite Ridge, and Neon Night Run.
+- Polished, separate vector background scenes and ground textures for each theme.
+- Five levels with different visual themes: Sunny Hills, Dusty Dunes, Pinewood Pass, Frostbite Ridge, and Neon Night Run.
 - Mouse/touch wheel drawing with sketch normalization.
 - Rolling terrain, camera follow, jumps, coins, a finish gate, level unlocks, and pause/restart controls.
 - Progress-based level unlocking saved locally in the browser.
