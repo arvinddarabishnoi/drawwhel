@@ -1,1 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="300" viewBox="0 0 256 150"><defs><linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ff8270"/><stop offset=".45" stop-color="#f44843"/><stop offset="1" stop-color="#a91e2d"/></linearGradient></defs><path d="M23 91 L31 72 Q36 59 53 56 L100 47 Q120 43 134 57 L153 76 L202 80 Q217 82 222 96 L219 108 L199 110 L48 110 L30 108 Q24 104 23 91Z" fill="url(#p)" stroke="#771c29" stroke-width="3"/><path d="M57 60 L95 53 Q108 52 117 62 L129 75 L83 75Z M121 62 L134 76 L147 77 L138 66 Q132 59 121 62Z" fill="#8ed9fa" stroke="#6c2934" stroke-width="2"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="300" viewBox="0 0 256 150">
+<defs><linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ff9580"/><stop offset=".28" stop-color="#fb584e"/><stop offset=".72" stop-color="#df303b"/><stop offset="1" stop-color="#9b1d31"/></linearGradient><linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f0fdff"/><stop offset=".42" stop-color="#a7e5ff"/><stop offset="1" stop-color="#457da7"/></linearGradient><linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#60798a"/><stop offset="1" stop-color="#172938"/></linearGradient></defs>
+<!-- undercarriage and reinforced bumpers -->
+<path d="M38 94 L211 94 L221 104 L212 114 L40 114 L27 106Z" fill="#17232f" stroke="#0a111a" stroke-width="3" stroke-linejoin="round"/>
+<path d="M20 91 L30 80 L39 83 L35 101 L24 103Z M210 82 L225 85 L232 96 L223 104 L212 99Z" fill="url(#metal)" stroke="#0b141d" stroke-width="3"/>
+<!-- body with genuine wheel arches -->
+<path d="M22 88 L28 72 Q34 57 53 54 L96 45 Q119 41 136 57 L153 74 L201 78 Q216 80 223 94 L222 104 L199 106 Q195 77 179 77 Q161 77 157 106 L91 106 Q86 77 69 77 Q52 77 48 106 L29 104 Q22 100 22 88Z" fill="url(#body)" stroke="#761a29" stroke-width="3" stroke-linejoin="round"/>
+<path d="M35 72 Q40 61 55 59 L95 51 Q113 49 124 63 L132 74 L43 76Z" fill="#ffb09a" opacity=".5"/>
+<!-- cabin glass and pillar frames -->
+<path d="M56 59 L94 52 Q109 51 117 62 L128 74 L81 74Z" fill="url(#glass)" stroke="#6e2637" stroke-width="2.5"/>
+<path d="M121 62 L135 75 L149 76 L140 65 Q132 58 121 62Z" fill="url(#glass)" stroke="#6e2637" stroke-width="2.5"/>
+<path d="M94 53 L91 73 M119 62 L116 74" stroke="#e7fbff" stroke-width="2" opacity=".75"/>
+<!-- roll cage -->
+<path d="M52 61 L60 42 Q63 37 70 37 L111 39 Q120 40 126 51 L139 66" fill="none" stroke="#263947" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M60 43 L111 43 Q117 44 121 52" fill="none" stroke="#91adbd" stroke-width="1.5"/>
+<!-- racing stripe and door details -->
+<path d="M34 82 L82 81 L75 87 L32 88Z" fill="#ffe67c"/>
+<path d="M84 81 L128 81 L123 87 L81 87Z" fill="#fff0b2" opacity=".9"/>
+<path d="M88 88 L88 101 M139 80 L149 96" stroke="#8f1e31" stroke-width="2"/>
+<path d="M96 91 L112 91" stroke="#ffb09a" stroke-width="2.5" stroke-linecap="round"/>
+<rect x="101" y="79" width="10" height="3" rx="1.5" fill="#4a1d2c"/>
+<!-- mirrors, headlights and rear lamp -->
+<path d="M50 62 L43 58 L40 62 L48 67Z" fill="#2c3d4b" stroke="#111b25" stroke-width="1.5"/>
+<path d="M211 83 L222 87 L225 93 L212 91Z" fill="#fff0a6" stroke="#e2a952" stroke-width="1.5"/>
+<path d="M31 80 L41 78 L38 84 L29 85Z" fill="#fff0a6" stroke="#d9433e" stroke-width="1.5"/>
+<!-- vents and protective bolts -->
+<path d="M163 84 L178 84 M163 89 L178 89 M163 94 L178 94" stroke="#5d1728" stroke-width="2.2" stroke-linecap="round"/>
+<g fill="#f8cbd0" stroke="#992434" stroke-width="1"><circle cx="43" cy="96" r="2"/><circle cx="206" cy="96" r="2"/><circle cx="145" cy="82" r="1.8"/></g>
+</svg>
