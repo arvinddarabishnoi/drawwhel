@@ -93,7 +93,7 @@ function initAudio(){
   const filter=audioCtx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=280;
   engineGain=audioCtx.createGain();engineGain.gain.value=.0001;engineOsc.connect(filter);filter.connect(engineGain);engineGain.connect(audioMaster);engineOsc.start();
  }
- if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+ if(audioCtx.state==='suspended')audioCtx.resume().then(()=>{if(soundEnabled)startMusic()}).catch(()=>{});else if(soundEnabled)startMusic();
 }
 function tone(freq,duration=.12,wave='sine',volume=.06,slide=0,delay=0){
  if(!soundEnabled)return;initAudio();if(!audioCtx)return;
@@ -127,10 +127,10 @@ function updateSoundButton(){
  b.textContent=soundEnabled?'🔊 SOUND ON':'🔇 SOUND OFF';b.setAttribute('aria-pressed',String(soundEnabled));
  b.title=soundEnabled?'Sound effects and music are on':'Sound effects and music are muted';
  if(audioMaster&&audioCtx)audioMaster.gain.setTargetAtTime(soundEnabled?.52:0,audioCtx.currentTime,.035);
- if(soundEnabled){initAudio();startMusic()}else{if(musicTimer){clearInterval(musicTimer);musicTimer=null}if(engineGain&&audioCtx)engineGain.gain.setTargetAtTime(.0001,audioCtx.currentTime,.04)}
+ if(soundEnabled){if(audioCtx&&audioCtx.state==='running')startMusic()}else{if(musicTimer){clearInterval(musicTimer);musicTimer=null}if(engineGain&&audioCtx)engineGain.gain.setTargetAtTime(.0001,audioCtx.currentTime,.04)}
 }
 function startMusic(){
- if(!soundEnabled||musicTimer)return;initAudio();if(!audioCtx)return;
+ if(!soundEnabled||musicTimer||!audioCtx||audioCtx.state!=='running')return;
  const notes=[392,494,587,494,440,523,659,523,392,494,587,784,659,587,494,440];
  musicTimer=setInterval(()=>{if(!soundEnabled||!audioCtx)return;const n=notes[musicStep%notes.length];tone(n,.20,'triangle',.013);if(musicStep%4===0)tone(n/2,.28,'sine',.009);musicStep++},330);
 }
@@ -140,9 +140,9 @@ function updateEngineSound(){
  engineOsc.frequency.setTargetAtTime(58+Math.min(90,moving*22),audioCtx.currentTime,.08);
  engineGain.gain.setTargetAtTime(moving>.2?Math.min(.045,moving*.009):.0001,audioCtx.currentTime,.10);
 }
-document.getElementById('soundBtn').addEventListener('click',()=>{soundEnabled=!soundEnabled;updateSoundButton();if(soundEnabled)playSound('ui')});
-document.addEventListener('pointerdown',()=>{if(soundEnabled){initAudio();startMusic()}},{once:true});
-window.addEventListener('keydown',()=>{if(soundEnabled){initAudio();startMusic()}},{once:true});
+document.getElementById('soundBtn').addEventListener('click',()=>{soundEnabled=!soundEnabled;updateSoundButton();if(soundEnabled){initAudio();playSound('ui')}});
+document.addEventListener('pointerdown',()=>{if(soundEnabled)initAudio()},{once:true});
+window.addEventListener('keydown',()=>{if(soundEnabled)initAudio()},{once:true});
 const savedUnlocked=Math.max(1,Math.min(5,Number(localStorage.getItem('drawwheal-unlocked')||1)));
 let unlocked=savedUnlocked,levelIndex=0,screen='title',paused=false;
 let car={x:90,speed:0,jump:0,jumpV:0,rot:0,roll:0};let cameraX=0,coins=0,levelCoins=new Set(),last=0;
